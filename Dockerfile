@@ -1,5 +1,5 @@
 # Use the official Node.js 16 image as base
-FROM node:16
+FROM node:18.15
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -8,13 +8,14 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install -f
 
 # Copy the rest of the application code to the container
 COPY . .
 
 # Expose the port on which your application will run
-EXPOSE 3000
+EXPOSE 4000
 
 # Command to run your application
 CMD ["npm", "run", "start"]
+

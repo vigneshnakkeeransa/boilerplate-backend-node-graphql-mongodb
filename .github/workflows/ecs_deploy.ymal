@@ -3,7 +3,7 @@ name: Docker Build, ECR Push, and ECS Deploy
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build:

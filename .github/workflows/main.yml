@@ -33,4 +33,4 @@ jobs:
             IMAGE_TAG: latest
           run: |
             docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-            docker push public.ecr.aws/w2s6v0a1/graphql-backend-api:latest
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

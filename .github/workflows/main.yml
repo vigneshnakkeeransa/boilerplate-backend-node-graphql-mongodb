@@ -6,13 +6,12 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: graphql-api
-  ECS_SERVICE: 	graphql-service
+  ECS_SERVICE: graphql-service
   ECS_CLUSTER: graphql-backend
-  ECS_TASK_DEFINITION: .aws/task-definition.json
   CONTAINER_NAME: graphql
 
 jobs:
-  deploy:
+  Build:
     name: Deploy
     runs-on: ubuntu-latest
     environment: development
@@ -45,18 +44,22 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+  deploy:
+    needs: Build
+    runs-on: ubuntu-latest
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+    steps:
+      - name: Login to Amazon ECS
+        uses: aws-actions/amazon-ecs-login@v1
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Amazon ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
